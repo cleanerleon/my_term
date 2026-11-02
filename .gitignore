@@ -1,0 +1,27 @@
+.build/
+.swiftpm/
+dist/
+.DS_Store
+*.xcuserstate
+# Local credentials, private keys and imported user configuration.
+.env
+.env.*
+!.env.example
+.ssh/
+.wind/
+id_rsa
+id_ecdsa
+id_ed25519
+id_dsa
+*.pem
+*.key
+*.p12
+*.pfx
+*.vault
+user.sessions
+onekeys.config
+sessions.json
+credentials.vault
+Keys/
+# Generated previews may contain local account names and paths.
+docs/previews/*.png
