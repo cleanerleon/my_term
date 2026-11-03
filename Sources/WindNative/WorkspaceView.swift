@@ -31,6 +31,7 @@ final class TerminalContainer: NSView {
 
 struct WorkspaceView: View {
     @ObservedObject var model: AppModel
+    @State private var hoveredTabID: UUID?
     @Environment(\.openWindow) private var openWindow
     var body: some View {
         VStack(spacing: 0) {
@@ -109,7 +110,7 @@ struct WorkspaceView: View {
                     if !model.query.isEmpty { Button { model.query = "" } label: { Image(systemName: "xmark.circle.fill") } }
                 }.font(.system(size: 12)).padding(12)
                 Divider()
-                List(selection: $model.selectedSession) {
+                List {
                     ForEach(model.folderTree) { folder in SessionFolderView(folder: folder, model: model) }
                 }.listStyle(.sidebar)
                 Divider()
@@ -177,7 +178,7 @@ struct WorkspaceView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 0) {
                         ForEach(model.tabs) { tab in
-                            TabButton(tab: tab, selected: model.activeTab == tab.id, select: { model.activeTab = tab.id }, close: { model.close(tab) })
+                            TabButton(tab: tab, selected: model.activeTab == tab.id, select: { model.activeTab = tab.id }, close: { model.close(tab) }, hover: { inside in hoveredTabID = inside ? tab.id : (hoveredTabID == tab.id ? nil : hoveredTabID) })
                                 .id(tab.id)
                                 .onDrag { NSItemProvider(object: tab.id.uuidString as NSString) }
                                 .onDrop(of: [.utf8PlainText], isTargeted: nil) { providers in
@@ -225,7 +226,12 @@ struct WorkspaceView: View {
                 .help("查看所有标签")
             Button { model.localShell() } label: { Image(systemName: "plus").frame(width: 30, height: 31) }
                 .buttonStyle(.plain).help("新建本地终端")
-        }.frame(height: 32).background(Color(nsColor: .controlBackgroundColor))
+        }.frame(height: 32)
+            .background(MiddleClickHandler {
+                guard let id = hoveredTabID, let tab = model.tabs.first(where: { $0.id == id }) else { return }
+                model.close(tab)
+            })
+            .background(Color(nsColor: .controlBackgroundColor))
     }
     private func selectAdjacentTab(_ direction: Int) {
         guard let current=model.tabs.firstIndex(where: {$0.id == model.activeTab}) else {return}
@@ -337,6 +343,7 @@ struct TabButton: View {
     let selected: Bool
     let select: () -> Void
     let close: () -> Void
+    let hover: (Bool) -> Void
     var body: some View {
         HStack(spacing: 8) {
             Rectangle().fill(tab.running ? tabColor(tab.tabColor) : Color.secondary).frame(width: 7, height: 7)
@@ -346,7 +353,7 @@ struct TabButton: View {
             .background(selected ? Color.primary.opacity(0.08) : .clear)
             .overlay(alignment: .top) { if selected { tabColor(tab.tabColor).frame(height: 2) } }
             .contentShape(Rectangle())
-            .background(MiddleClickHandler(action: close))
+            .onHover(perform: hover)
             .gesture(TapGesture(count: 2).onEnded { close() }.exclusively(before: TapGesture().onEnded { select() }))
             .help("点击切换，双击或中键关闭标签")
     }

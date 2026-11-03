@@ -18,7 +18,7 @@ struct TransferRecord: Identifiable {
     @Published var path = ""
     @Published var pathInput = ""
     @Published var entries: [RemoteEntry] = []
-    @Published var selected: String?
+    @Published var selected: Set<String> = []
     @Published var busy = false
     @Published var connected = false
     @Published var message = "尚未连接"
@@ -35,7 +35,8 @@ struct TransferRecord: Identifiable {
     private var operation = UUID()
     init(session: Session, all: [Session], directory: URL, credentialStore: CredentialStore) { self.session = session; self.all = all; self.directory = directory; self.credentialStore = credentialStore }
     var visible: [RemoteEntry] { entries.filter { (showHidden || !$0.name.hasPrefix(".")) && (filter.isEmpty || $0.name.localizedCaseInsensitiveContains(filter)) } }
-    var selectedEntry: RemoteEntry? { entries.first { $0.id == selected } }
+    var selectedEntries: [RemoteEntry] { entries.filter { selected.contains($0.id) } }
+    var selectedEntry: RemoteEntry? { selectedEntries.first }
 
     func connect() {
         guard !busy else { return }
@@ -90,7 +91,7 @@ struct TransferRecord: Identifiable {
             let canonical = try await client.realpath(destination)
             let rows = try await client.list(canonical)
             try Task.checkCancellation()
-            self.path = canonical; self.pathInput = canonical; self.entries = rows; self.selected = nil
+            self.path = canonical; self.pathInput = canonical; self.entries = rows; self.selected = []
             if let destinationIndex { self.historyIndex = destinationIndex; self.history[destinationIndex] = canonical }
             else { self.recordHistory(canonical) }
         }
@@ -112,7 +113,7 @@ struct TransferRecord: Identifiable {
                     let canonical = try await client.realpath(entry.path)
                     let rows = try await client.list(canonical)
                     try Task.checkCancellation()
-                    self.path = canonical; self.pathInput = canonical; self.entries = rows; self.selected = nil
+                    self.path = canonical; self.pathInput = canonical; self.entries = rows; self.selected = []
                     self.recordHistory(canonical)
                 } else { self.message = "文件链接，请使用下载按钮" }
             }
@@ -150,7 +151,23 @@ struct TransferRecord: Identifiable {
         guard alert.runModal() == .alertSecondButtonReturn else { return }
         run("正在删除…") { [self] in
             try await client.remove(entry.path, directory: entry.isDirectory)
-            self.entries = try await client.list(path); self.selected = nil
+            self.entries = try await client.list(path); self.selected = []
+        }
+    }
+    func removeSelected() {
+        let chosen = selectedEntries
+        guard let client, connected, !busy, !chosen.isEmpty else { return }
+        let alert = NSAlert(); alert.alertStyle = .warning
+        alert.messageText = "删除选中的 \(chosen.count) 个远程项目？"
+        alert.informativeText = "此操作直接从服务器删除，无法移至废纸篓。文件夹必须为空。"
+        alert.addButton(withTitle: "取消"); alert.addButton(withTitle: "删除")
+        guard alert.runModal() == .alertSecondButtonReturn else { return }
+        run("正在删除 \(chosen.count) 项…") { [self] in
+            for entry in chosen {
+                try Task.checkCancellation()
+                try await client.remove(entry.path, directory: entry.isDirectory)
+            }
+            self.entries = try await client.list(path); self.selected = []
         }
     }
     func chooseUpload() {
@@ -158,9 +175,10 @@ struct TransferRecord: Identifiable {
         let panel = NSOpenPanel(); panel.title = "上传文件到 \(session.name)"; panel.allowsMultipleSelection = true; panel.canChooseDirectories = false
         if panel.runModal() == .OK { upload(panel.urls) }
     }
-    func upload(_ urls: [URL]) {
+    func upload(_ urls: [URL], cleanupAfter staging: URL? = nil) {
         guard let client, connected, !busy, !urls.isEmpty else { return }
         run("正在上传…") { [self] in
+            defer { if let staging { try? FileManager.default.removeItem(at: staging) } }
             for url in urls {
                 try Task.checkCancellation()
                 let name = url.lastPathComponent

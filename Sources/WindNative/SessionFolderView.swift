@@ -33,7 +33,10 @@ struct SessionFolderView: View {
                     guard let provider = providers.first else { return false }
                     _ = provider.loadObject(ofClass: String.self) { id, _ in
                         guard let id else { return }
-                        Task { @MainActor in if let session = model.sessions.first(where: { $0.id == id }) { model.move(session, to: folder.path) } }
+                        Task { @MainActor in
+                            let ids = id.hasPrefix("myterm-sessions:") ? ((try? JSONDecoder().decode([String].self, from: Data(id.dropFirst("myterm-sessions:".count).utf8))) ?? []) : [id]
+                            model.moveSessions(Set(ids), to: folder.path)
+                        }
                     }
                     return true
                 }
@@ -52,9 +55,14 @@ struct SessionTreeRow: View {
             Spacer(minLength: 0)
             if !session.jump.isEmpty { Image(systemName: "arrow.triangle.branch").font(.system(size: 10)).foregroundStyle(.secondary) }
         }.padding(.vertical, 5).contentShape(Rectangle())
+            .background(model.selectedSessions.contains(session.id) ? Color.accentColor.opacity(0.3) : .clear, in: RoundedRectangle(cornerRadius: 4))
             .onTapGesture(count: 2) { model.selectedSession = session.id; model.connect(session) }
-            .simultaneousGesture(TapGesture().onEnded { model.selectedSession = session.id })
-            .onDrag { NSItemProvider(object: session.id as NSString) }
+            .onTapGesture { model.selectSession(session.id, modifiers: NSEvent.modifierFlags) }
+            .onDrag {
+                let ids = model.selectedSessions.contains(session.id) ? model.selectedSessions.sorted() : [session.id]
+                let data = (try? JSONEncoder().encode(ids)) ?? Data("[]".utf8)
+                return NSItemProvider(object: ("myterm-sessions:" + String(decoding: data, as: UTF8.self)) as NSString)
+            }
             .help(session.endpoint + " · 双击连接")
             .contextMenu {
                 Button("连接 SSH") { model.connect(session) }.disabled(!session.supported)

@@ -251,11 +251,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             model.reconcilePanes()
             try? await Task.sleep(nanoseconds: 700_000_000)
             self.writePreview(output.deletingPathExtension().appendingPathExtension("many-tabs.png"), view: workspaceWindow?.contentView)
-            let passed = reconnectCheck && tabSwitchCheck && splitCheck && senderCheck && commandSaved && credentialsCheck && tab?.exitCode == 7 && tab?.running == false && attached && unicode && folderCheck && browserCheck
+            let selectionFixtures = (1...3).map { Session(id: "selection-\($0)", name: "Selection \($0)", group: "Selection Test", host: "test\($0).invalid") }
+            for session in selectionFixtures { model.save(session) }
+            model.setFolderExpanded("Selection Test", expanded: true)
+            model.selectSession("selection-1", modifiers: [])
+            model.selectSession("selection-3", modifiers: [.shift])
+            let rangeSelected = model.selectedSessions == Set(selectionFixtures.map(\.id))
+            model.selectSession("selection-2", modifiers: [.control])
+            let toggleSelected = model.selectedSessions == Set(["selection-1", "selection-3"])
+            model.moveSessions(model.selectedSessions, to: "Selection Target")
+            let persisted = try? JSONDecoder().decode(SavedState.self, from: Data(contentsOf: model.support.appendingPathComponent("sessions.json")))
+            let moved = persisted?.custom.filter { $0.id.hasPrefix("selection-") } ?? []
+            let selectionCheck = rangeSelected && toggleSelected && moved.filter { $0.group == "Selection Target" }.count == 2 && moved.first { $0.id == "selection-2" }?.group == "Selection Test"
+            let passed = selectionCheck && reconnectCheck && tabSwitchCheck && splitCheck && senderCheck && commandSaved && credentialsCheck && tab?.exitCode == 7 && tab?.running == false && attached && unicode && folderCheck && browserCheck
             let window = workspaceWindow
             let titlebarHeight = window.map { $0.frame.height - $0.contentLayoutRect.height } ?? -1
             let report: [String: Any] = ["tabSwitching": tabSwitchCheck, "nestedSplitPanes": splitCheck, "focusedCommandSender": senderCheck, "savedCommands": commandSaved, "credentialsManager": credentialsCheck, "titlebarHeight": titlebarHeight, "passed": passed, "terminalAttachedToWindow": attached, "unicodeOutput": unicode, "exitCode": tab?.exitCode ?? -1, "applicationSurvivedChildExit": true, "folderTree": folderCheck, "sftpBrowser": browserExpected ? browserCheck as Any : NSNull()]
             var checkedReport = report
+            checkedReport["multipleSessionSelectionAndMove"] = selectionCheck
             checkedReport["disconnectedSSHReturnReconnect"] = reconnectCheck
             do { try JSONSerialization.data(withJSONObject: checkedReport, options: [.prettyPrinted, .sortedKeys]).write(to: output, options: .atomic) }
             catch { fputs("Could not write smoke report: \(error.localizedDescription)\n", stderr) }

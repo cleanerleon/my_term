@@ -199,6 +199,8 @@ final class TerminalTab: NSObject, ObservableObject, Identifiable, LocalProcessT
     @Published var sessions: [Session] = []
     @Published var tabs: [TerminalTab] = []
     @Published var selectedSession: String?
+    @Published var selectedSessions: Set<String> = []
+    private var selectionAnchor: String?
     @Published var activeTab: UUID?
     @Published var query = ""
     @Published var error: String?
@@ -272,6 +274,27 @@ final class TerminalTab: NSObject, ObservableObject, Identifiable, LocalProcessT
     var groups: [String] { Array(Set(filtered.map(\.group))).sorted() }
     var folderTree: [SessionFolder] { SessionFolder.tree(sessions: filtered, emptyFolders: query.isEmpty ? saved.folders ?? [] : []) }
     var folderPaths: [String] { SessionFolder.allPaths(sessions: sessions, emptyFolders: saved.folders ?? []) }
+    var visibleSessionIDs: [String] {
+        func flatten(_ folder: SessionFolder) -> [String] {
+            guard !query.isEmpty || expandedFolders.contains(folder.path) else { return [] }
+            return folder.children.flatMap(flatten) + folder.sessions.map(\.id)
+        }
+        return folderTree.flatMap(flatten)
+    }
+    func selectSession(_ id: String, modifiers: NSEvent.ModifierFlags) {
+        let toggle = modifiers.contains(.command) || modifiers.contains(.control)
+        if modifiers.contains(.shift), let anchor = selectionAnchor,
+           let start = visibleSessionIDs.firstIndex(of: anchor), let end = visibleSessionIDs.firstIndex(of: id) {
+            let range = Set(visibleSessionIDs[min(start,end)...max(start,end)])
+            selectedSessions = toggle ? selectedSessions.union(range) : range
+        } else if toggle {
+            if selectedSessions.contains(id) { selectedSessions.remove(id) } else { selectedSessions.insert(id) }
+            selectionAnchor = id
+        } else {
+            selectedSessions = [id]; selectionAnchor = id
+        }
+        selectedSession = selectedSessions.contains(id) ? id : selectedSessions.first
+    }
     var currentBrowser: RemoteBrowser? { fileSession.flatMap { browsers[$0] } }
     var hasFileConnections: Bool { browsers.values.contains { $0.connected || $0.busy } }
     func setFolderExpanded(_ path: String, expanded: Bool) {
@@ -298,11 +321,22 @@ final class TerminalTab: NSObject, ObservableObject, Identifiable, LocalProcessT
         if sidebarMode == .files, let session = currentTab?.session, session.kind == "SSH" { openFiles(session) }
     }
     func move(_ session: Session, to folder: String) {
-        var updated = session; updated.group = folder
-        save(updated)
-        for path in SessionFolder.allPaths(sessions: [updated], emptyFolders: []) { expandedFolders.insert(path) }
+        moveSessions([session.id], to: folder)
+    }
+    func moveSessions(_ ids: Set<String>, to folder: String) {
+        let matching = sessions.filter { ids.contains($0.id) }
+        guard !matching.isEmpty else { return }
+        let previous = saved, previousExpanded = expandedFolders
+        for session in matching {
+            var updated = session; updated.group = folder
+            saved.folders = Array(Set((saved.folders ?? []) + [session.group, folder]))
+            if imported.contains(where: { $0.id == session.id }) { saved.overrides[session.id] = updated }
+            else if let index = saved.custom.firstIndex(where: { $0.id == session.id }) { saved.custom[index] = updated }
+        }
+        for path in SessionFolder.allPaths(sessions: [], emptyFolders: [folder]) { expandedFolders.insert(path) }
         saved.expandedFolders = Array(expandedFolders)
-        try? persist()
+        do { try persist(); rebuild(); selectedSessions = Set(matching.map(\.id)); notice = "已移动 \(matching.count) 个会话到 \(folder)" }
+        catch { saved = previous; expandedFolders = previousExpanded; self.error = error.localizedDescription }
     }
     func removeEmptyFolder(_ path: String) {
         guard !sessions.contains(where: { let group = SessionFolder.normalized($0.group); return group == path || group.hasPrefix(path + "/") }) else { return }

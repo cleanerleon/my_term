@@ -59,13 +59,31 @@ struct FileBrowserView: View {
             HStack(spacing: 10) {
                 Text("\(browser.visible.count) 项").font(.system(size: 11)).foregroundStyle(.secondary)
                 Spacer()
+                if !browser.message.isEmpty {
+                    Text(browser.message).font(.system(size: 10)).foregroundStyle(.secondary).lineLimit(1).help(browser.message)
+                }
                 Button { browser.chooseUpload() } label: { Image(systemName: "square.and.arrow.up") }.help("上传文件")
                 Button { if let entry = browser.selectedEntry { browser.download(entry) } } label: { Image(systemName: "square.and.arrow.down") }.help("下载所选文件").disabled(browser.selectedEntry == nil || browser.selectedEntry?.isDirectory == true)
+                Button { browser.removeSelected() } label: { Image(systemName: "trash") }.help("删除所选文件或文件夹").disabled(browser.selectedEntries.isEmpty)
                 Button { browser.mkdir() } label: { Image(systemName: "folder.badge.plus") }.help("新建文件夹")
             }.padding(.horizontal, 12).frame(height: 34).disabled(!browser.connected || browser.busy)
             Divider()
             transfers
         }.buttonStyle(.borderless)
+            .onDrop(of: [.fileURL], isTargeted: nil) { providers in
+                guard browser.connected, !browser.busy else { return false }
+                Task { @MainActor in
+                    var urls: [URL] = []
+                    for provider in providers {
+                        let url: URL? = await withCheckedContinuation { continuation in
+                            _ = provider.loadObject(ofClass: URL.self) { value, _ in continuation.resume(returning: value) }
+                        }
+                        if let url, url.isFileURL { urls.append(url) }
+                    }
+                    browser.upload(urls)
+                }
+                return true
+            }
     }
     private var fileTable: some View {
         VStack(spacing: 0) {
@@ -97,20 +115,6 @@ struct FileBrowserView: View {
                     Text(entry.isDirectory ? "—" : entry.size.map { ByteCountFormatter.string(fromByteCount: Int64(clamping: $0), countStyle: .file) } ?? "—").font(.system(size: 10)).foregroundStyle(.secondary)
                 }.width(min: 45, ideal: 55, max: 75)
             }.tableStyle(.inset(alternatesRowBackgrounds: false)).disabled(browser.busy)
-                .onDrop(of: [.fileURL], isTargeted: nil) { providers in
-                    guard browser.connected, !browser.busy else { return false }
-                    Task { @MainActor in
-                        var urls: [URL] = []
-                        for provider in providers {
-                            let url: URL? = await withCheckedContinuation { continuation in
-                                _ = provider.loadObject(ofClass: URL.self) { url, _ in continuation.resume(returning: url) }
-                            }
-                            if let url, url.isFileURL { urls.append(url) }
-                        }
-                        browser.upload(urls)
-                    }
-                    return true
-                }
         }
     }
     private var transfers: some View {

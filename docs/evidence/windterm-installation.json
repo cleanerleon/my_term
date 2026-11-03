@@ -1,0 +1,196 @@
+{
+  "evidence_kind": "local packaged resources and Mach-O dependency inspection; not decompilation or runtime trace",
+  "created_at": "2026-10-20T14:26:14.378275+00:00",
+  "target": "/Applications/WindTerm.app",
+  "artifacts": [
+    {
+      "path": "/Applications/WindTerm.app/Contents/MacOS/WindTerm",
+      "sha256": "d26c6406b848d3bdcc97bd3cf87ba8fdb089a0f5e960fb7155a34d341235edd1",
+      "bytes": 15978608
+    },
+    {
+      "path": "/Applications/WindTerm.app/Contents/MacOS/global/wind.actions",
+      "sha256": "b04eb0101e6d652a1ea777eabee88318625dbd267d7938b7f0238aa5a0a2c89d",
+      "bytes": 129042
+    },
+    {
+      "path": "/Applications/WindTerm.app/Contents/MacOS/terminal/configs/menu.config",
+      "sha256": "6e8c9cd3055dc811271aef2c9465c606952c67dcb2cfab03d296d33015245622",
+      "bytes": 28073
+    },
+    {
+      "path": "/Applications/WindTerm.app/Contents/MacOS/terminal/configs/toolbar.config",
+      "sha256": "22dd7bb64d347e1d9821fadcbea49b6dbcb192d2d86ee6598e399073a326e26b",
+      "bytes": 1469
+    },
+    {
+      "path": "/Applications/WindTerm.app/Contents/MacOS/terminal/configs/session.config",
+      "sha256": "e97009e1c57ba17709bc52738c964df18341cfc0c24895f76821b9a6141803cd",
+      "bytes": 3258
+    },
+    {
+      "path": "/Applications/WindTerm.app/Contents/Frameworks/libssh.4.dylib",
+      "sha256": "e13a76804d655f6ecc389d1845e4723479b8d7b6193cf28481a38849d6e1ff83",
+      "bytes": 915568
+    }
+  ],
+  "architecture": "/Applications/WindTerm.app/Contents/MacOS/WindTerm: Mach-O 64-bit executable x86_64",
+  "linked_libraries": [
+    "\t@rpath/libssh.4.dylib (compatibility version 4.0.0, current version 4.8.7)",
+    "\t@rpath/QtMultimedia.framework/Versions/5/QtMultimedia (compatibility version 5.15.0, current version 5.15.2)",
+    "\t@rpath/QtSvg.framework/Versions/5/QtSvg (compatibility version 5.15.0, current version 5.15.2)",
+    "\t@rpath/QtWidgets.framework/Versions/5/QtWidgets (compatibility version 5.15.0, current version 5.15.2)",
+    "\t@rpath/QtGui.framework/Versions/5/QtGui (compatibility version 5.15.0, current version 5.15.2)",
+    "\t/System/Library/Frameworks/AppKit.framework/Versions/C/AppKit (compatibility version 45.0.0, current version 2113.20.111)",
+    "\t/System/Library/Frameworks/Metal.framework/Versions/A/Metal (compatibility version 1.0.0, current version 258.17.0)",
+    "\t@rpath/QtQml.framework/Versions/5/QtQml (compatibility version 5.15.0, current version 5.15.2)",
+    "\t@rpath/QtNetwork.framework/Versions/5/QtNetwork (compatibility version 5.15.0, current version 5.15.2)",
+    "\t@rpath/QtSerialPort.framework/Versions/5/QtSerialPort (compatibility version 5.15.0, current version 5.15.2)",
+    "\t@rpath/QtCore.framework/Versions/5/QtCore (compatibility version 5.15.0, current version 5.15.2)",
+    "\t/System/Library/Frameworks/DiskArbitration.framework/Versions/A/DiskArbitration (compatibility version 1.0.0, current version 1.0.0)",
+    "\t/System/Library/Frameworks/IOKit.framework/Versions/A/IOKit (compatibility version 1.0.0, current version 275.0.0)",
+    "\t/System/Library/Frameworks/OpenGL.framework/Versions/A/OpenGL (compatibility version 1.0.0, current version 1.0.0)",
+    "\t/System/Library/Frameworks/AGL.framework/Versions/A/AGL (compatibility version 1.0.0, current version 1.0.0)",
+    "\t/usr/lib/libc++.1.dylib (compatibility version 1.0.0, current version 1200.3.0)",
+    "\t/usr/lib/libSystem.B.dylib (compatibility version 1.0.0, current version 1311.0.0)"
+  ],
+  "action_definition_count": 526,
+  "focused_actions": {
+    "SenderPane.StartSender": {
+      "line": 660,
+      "resource_excerpt": "\"SenderPane.StartSender\" : {\n    \"text\"      : \"Send\",\n    \"icon\"      : \"king::start\",\n    \"state\"     : \"(action) => { let sender = window.activeKit.pane('SenderPane'); action.enabled = !sender.isSending() }\",\n    \"script\"    : \"() => { let sender = window.activeKit.pane('SenderPane'); sender.startSender() }\"\n  },"
+    },
+    "Terminal.DuplicateSession": {
+      "line": 796,
+      "resource_excerpt": "\"Terminal.DuplicateSession\" : {\n    \"text\"      : \"&Duplicate Session\",\n    \"state\"     : \"(action) => { action.enabled = terminal.activeView() != null }\",\n    \"script\"    : \"() => { terminal.duplicateSession(terminal.activeView(), true) }\"\n  },"
+    },
+    "Window.DuplicateView": {
+      "line": 2297,
+      "resource_excerpt": "\"Window.DuplicateView\" : {\n    \"text\"      : \"&Duplicate View\",\n    \"state\"     : \"(action) => { action.enabled = window.activeView() ? true : false }\",\n    \"script\"    : \"() => { window.activeKit.cloneView(window.activeView(), true) }\"\n  },"
+    },
+    "Window.RenameView": {
+      "line": 2367,
+      "resource_excerpt": "\"Window.RenameView\" : {\n    \"text\"      : \"&Rename View\",\n    \"script\"    : \"() => { window.activeKit.renameView(window.activeView()) }\"\n  },"
+    },
+    "Window.ReopenClosedView": {
+      "line": 2371,
+      "resource_excerpt": "\"Window.ReopenClosedView\" : {\n    \"text\"      : \"&Reopen Closed View\",\n    \"state\"     : \"(action) => { action.visible = (window.activeKit.recentUrls().length > 0) }\",\n    \"script\"    : \"(action) => { window.activeKit.reopen() }\"\n  },"
+    },
+    "Window.SplitViewHorizontally": {
+      "line": 2544,
+      "resource_excerpt": "\"Window.SplitViewHorizontally\" : {\n    \"text\"      : \"Split View &Horizontally\",\n    \"icon\"      : \"king::splitHorizontally\",\n    \"state\"     : \"(action) => { action.enabled = window.activeView() ? true : false }\",\n    \"script\"    : \"() => { window.activeKit.splitView(King.Right) }\"\n  },"
+    },
+    "Window.SplitViewVertically": {
+      "line": 2570,
+      "resource_excerpt": "\"Window.SplitViewVertically\" : {\n    \"text\"      : \"Split View &Vertically\",\n    \"icon\"      : \"king::splitVertically\",\n    \"state\"     : \"(action) => { action.enabled = window.activeView() ? true : false }\",\n    \"script\"    : \"() => { window.activeKit.splitView(King.Bottom) }\"\n  },"
+    },
+    "Window.TogglePaneSender": {
+      "line": 2649,
+      "resource_excerpt": "\"Window.TogglePaneSender\" : {\n    \"text\"      : \"&Sender\",\n    \"icon\"      : \"king::senderPane\",\n    \"state\"     : \"(action) => { action.checked = action.checkable = window.activeKit.isPaneHidden('SenderPane') ? false : true }\",\n    \"script\"    : \"() => { window.activeKit.togglePane('SenderPane') }\"\n  },"
+    },
+    "Window.TogglePaneSession": {
+      "line": 2655,
+      "resource_excerpt": "\"Window.TogglePaneSession\" : {\n    \"text\"      : \"&Session\",\n    \"icon\"      : \"king::sessionPane\",\n    \"state\"     : \"(action) => { action.checked = action.checkable = window.activeKit.isPaneHidden('SessionPane') ? false : true }\",\n    \"script\"    : \"() => { window.activeKit.togglePane('SessionPane') }\"\n  },"
+    },
+    "Window.TogglePaneTransfer": {
+      "line": 2667,
+      "resource_excerpt": "\"Window.TogglePaneTransfer\" : {\n    \"text\"      : \"&Transfer\",\n    \"icon\"      : \"king::transferPane\",\n    \"state\"     : \"(action) => { action.checked = action.checkable = window.activeKit.isPaneHidden('TransferPane') ? false : true }\",\n    \"script\"    : \"() => { window.activeKit.togglePane('TransferPane') }\"\n  },"
+    }
+  },
+  "session_defaults": {
+    "filer.autoSyncTerminalFolder": false,
+    "modem.alwaysUseDownloadFolder": false,
+    "modem.defaultUploadProtocol": "ZMODEM",
+    "process.locale": "Automatic",
+    "serial.baudRate": 9600,
+    "serial.dataBits": 8,
+    "serial.flowControl": "None",
+    "serial.parity": "None",
+    "serial.stopBits": 1,
+    "session.allowRemoteReadClipboard": 2,
+    "session.allowRemoteWriteClipboard": 2,
+    "session.autoExecutionDelay": 1,
+    "session.charset": "UTF-8",
+    "session.connectionTimeout": 20,
+    "session.icon": "auto",
+    "session.keepAlive": 60,
+    "session.logFilePath": "%n_%Y-%m-%d_%H-%M-%S.log",
+    "session.logFileSize": 0,
+    "session.logPattern": "[%Y-%m-%d %H:%M:%S] %v",
+    "session.logType": 0,
+    "session.logOption": 1,
+    "session.proxy": "None",
+    "session.proxyDns": true,
+    "session.proxyWorkingDirectory": "${HomeDir}",
+    "session.system": "linux",
+    "session.tcpLowDelay": true,
+    "session.tcpKeepAlive": false,
+    "session.tcpReceiveBufferSize": 0,
+    "session.tcpSendBufferSize": 0,
+    "session.term": "xterm-256color",
+    "sftp.fileCreationPermissions": "644",
+    "sftp.folderCreationPermissions": "755",
+    "sftp.fixInvalidPathCharacters": true,
+    "sftp.preserveOriginalFileModifyTime": true,
+    "sftp.preserveOriginalFolderModifyTime": false,
+    "shell.sysmon": true,
+    "ssh.agentForwarding": false,
+    "ssh.authAgent": false,
+    "ssh.authGssapiWithMic": true,
+    "ssh.authKeyboardInteractive": true,
+    "ssh.authPassword": true,
+    "ssh.authPublicKey": true,
+    "ssh.rekeyDataLimit": 1000,
+    "ssh.rekeyTimeLimit": 60,
+    "ssh.sftp": true,
+    "ssh.sysmon": false,
+    "ssh.verifyServerFingerprint": true,
+    "ssh.x11": false,
+    "terminal.altModifierKey": 0,
+    "terminal.answerBack": "Wind",
+    "terminal.autoWrapMode": true,
+    "terminal.backspaceKey": 0,
+    "terminal.bellInterval": 2,
+    "terminal.bellStyle": 1,
+    "terminal.cursorKeysMode": 0,
+    "terminal.deleteKey": 0,
+    "terminal.eraseWithBackground": true,
+    "terminal.formatOtherKeys": 0,
+    "terminal.metaModifierKey": 1,
+    "terminal.newLineMode": false,
+    "terminal.numericKeypadMode": 0,
+    "terminal.reverseScreenMode": false,
+    "transfer.congestionStrategy": "aggressive",
+    "transfer.enableAsyncFile": true,
+    "transfer.enableMappedFile": false,
+    "transfer.enableNullFile": false,
+    "transfer.handlers": 8,
+    "transfer.maxFileDescriptors": 16,
+    "transfer.maxHandlers": 128,
+    "transfer.maxLocalChunkSize": 0,
+    "transfer.maxRemoteChunkSize": 0,
+    "window.altScreen.wordSeparators": "`!@#$^*()=[{]}|;:'\",<>?",
+    "window.autoAdjustRowsAndColumns": true,
+    "window.autoAdjustTabTitle": false,
+    "window.mouseWheelScrollLines": 1,
+    "window.scrollbackLimit": 999999,
+    "window.timestampFormat": "[HH:mm:ss]",
+    "window.timestampLongFormat": "yyyy-MM-dd HH:mm:ss",
+    "window.caretStyle": "block",
+    "window.columns": 80,
+    "window.rows": 24,
+    "window.wordSeparators": "`!@#$^*()=[{]}|;:'\",<>?",
+    "xmodem.packetSize": 128,
+    "xmodem.uploadCommand": "rx\r",
+    "ymodem.packetSize": 1024,
+    "ymodem.uploadCommand": "rb\r",
+    "zmodem.uploadCommand": "rz\r"
+  },
+  "tool_limitations": [
+    "REA doctor 6.7.0 found Codex registration missing/stale and no Hopper, Ghidra or IDA provider.",
+    "No REA native decompilation was performed. No REA Evidence ID is claimed.",
+    "Action resources are not strict JSON; bounded textual definitions inspected without executing scripts.",
+    "Declarative actions establish exposed operations, not the closed implementation or reliability.",
+    "No user credentials, private keys, server traffic, or terminal output collected."
+  ]
+}
